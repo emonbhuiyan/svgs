@@ -104,20 +104,33 @@
         }
 
         function downloadPNG() {
-            document.querySelectorAll(".logo").forEach((logo, index) => {
-                html2canvas(logo, {
-                    backgroundColor: null, // Removes background, making it transparent
-                }).then(canvas => {
+            document.querySelectorAll(".logo svg").forEach((svgElement, index) => {
+                let svgData = new XMLSerializer().serializeToString(svgElement);
+                let canvas = document.createElement("canvas");
+                let ctx = canvas.getContext("2d");
+                let img = new Image();
+
+                let svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+                let url = URL.createObjectURL(svgBlob);
+
+                img.onload = function () {
+                    canvas.width = 600;
+                    canvas.height = 80;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(url);
+
                     let a = document.createElement("a");
                     a.href = canvas.toDataURL("image/png");
                     a.download = `logo${index + 1}.png`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                });
+                };
+
+                img.src = url;
             });
         }
-
     </script>
 </body>
 </html>
