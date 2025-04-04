@@ -5,14 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logo Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Load Ubuntu font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             background: #f4f4f4;
+            padding: 20px;
         }
         .container {
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
         }
         .preview {
             display: flex;
@@ -29,6 +37,7 @@
             justify-content: center;
             background: white;
             border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         svg {
             width: 100%;
@@ -36,18 +45,55 @@
         }
         button {
             margin-top: 10px;
-            padding: 10px;
+            padding: 10px 15px;
             cursor: pointer;
+            background: #EB6427;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #D45A23;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .download-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        @font-face {
+            font-family: 'Ubuntu';
+            font-style: normal;
+            font-weight: 700;
+            src: local('Ubuntu Bold'), local('Ubuntu-Bold'),
+                 url('https://fonts.gstatic.com/s/ubuntu/v15/4iCv6KVjbNBYlgoCxCvjsGyI.woff2') format('woff2');
         }
     </style>
 </head>
 <body>
     <h1>Logo Generator</h1>
     <div class="container">
-        <label>Enter Word: </label>
-        <input type="text" id="wordInput" value="Nursing">
-        <label>Font Size: </label>
-        <input type="number" id="fontSizeInput" value="55" min="30" max="80">
+        <div>
+            <label>Enter Word: </label>
+            <input type="text" id="wordInput" value="Nursing">
+        </div>
+        <div>
+            <label>Font Size: </label>
+            <input type="number" id="fontSizeInput" value="55" min="30" max="80">
+        </div>
+        <div>
+            <label>Font Weight: </label>
+            <select id="fontWeightInput">
+                <option value="400">Regular</option>
+                <option value="700" selected>Bold</option>
+            </select>
+        </div>
         <button onclick="generateLogos()">Generate</button>
     </div>
 
@@ -57,16 +103,41 @@
         <div class="logo" id="logo3"></div>
     </div>
 
-    <button onclick="downloadSVG()">Download SVG</button>
-    <button onclick="downloadPNG()">Download PNG</button>
+    <div class="download-buttons">
+        <button onclick="downloadSVG()">Download All SVGs</button>
+        <button onclick="downloadPNG()">Download All PNGs</button>
+    </div>
 
     <script>
-        function generateSVG(word, fontSize, align = "start", color2 = "#ffffff") {
+        // Check if Ubuntu font is available
+        function isUbuntuFontAvailable() {
+            return document.fonts.check('16px "Ubuntu"');
+        }
+
+        // Load Ubuntu font if not available
+        function ensureUbuntuFontLoaded() {
+            if (!isUbuntuFontAvailable()) {
+                const font = new FontFace('Ubuntu', 'url(https://fonts.gstatic.com/s/ubuntu/v15/4iCv6KVjbNBYlgoCxCvjsGyI.woff2)', {
+                    weight: '700'
+                });
+                
+                return font.load().then(() => {
+                    document.fonts.add(font);
+                    return true;
+                }).catch(() => {
+                    console.warn('Ubuntu font failed to load from Google Fonts');
+                    return false;
+                });
+            }
+            return Promise.resolve(true);
+        }
+
+        function generateSVG(word, fontSize, fontWeight, align = "start", color2 = "#ffffff") {
             return `
                 <svg width="600" height="80" xmlns="http://www.w3.org/2000/svg">
                     <rect width="100%" height="100%" fill="transparent"/>
                     <text x="${align === 'middle' ? '50%' : '5'}" y="50%" font-family="Ubuntu, sans-serif"
-                          font-size="${fontSize}px" font-weight="bold" fill="#EB6427" 
+                          font-size="${fontSize}px" font-weight="${fontWeight}" fill="#EB6427" 
                           text-anchor="${align === 'middle' ? 'middle' : 'start'}" dominant-baseline="middle">
                         Get <tspan fill="${color2}">${word} Jobs</tspan>
                     </text>
@@ -75,28 +146,33 @@
         }
 
         function generateLogos() {
-            let word = document.getElementById("wordInput").value;
-            let fontSize = document.getElementById("fontSizeInput").value;
+            ensureUbuntuFontLoaded().then(() => {
+                let word = document.getElementById("wordInput").value;
+                let fontSize = document.getElementById("fontSizeInput").value;
+                let fontWeight = document.getElementById("fontWeightInput").value;
 
-            document.getElementById("logo1").innerHTML = generateSVG(word, fontSize, "start", "#ffffff");
-            document.getElementById("logo2").innerHTML = generateSVG(word, fontSize, "middle", "#ffffff");
-            document.getElementById("logo3").innerHTML = generateSVG(word, fontSize, "middle", "#0D245D");
+                document.getElementById("logo1").innerHTML = generateSVG(word, fontSize, fontWeight, "start", "#ffffff");
+                document.getElementById("logo2").innerHTML = generateSVG(word, fontSize, fontWeight, "middle", "#ffffff");
+                document.getElementById("logo3").innerHTML = generateSVG(word, fontSize, fontWeight, "middle", "#0D245D");
+            });
         }
 
         function downloadSVG() {
             let word = document.getElementById("wordInput").value;
             let fontSize = document.getElementById("fontSizeInput").value;
+            let fontWeight = document.getElementById("fontWeightInput").value;
+            
             let svgs = [
-                generateSVG(word, fontSize, "start", "#ffffff"),
-                generateSVG(word, fontSize, "middle", "#ffffff"),
-                generateSVG(word, fontSize, "middle", "#0D245D")
+                generateSVG(word, fontSize, fontWeight, "start", "#ffffff"),
+                generateSVG(word, fontSize, fontWeight, "middle", "#ffffff"),
+                generateSVG(word, fontSize, fontWeight, "middle", "#0D245D")
             ];
 
             svgs.forEach((svg, index) => {
                 let blob = new Blob([svg], { type: "image/svg+xml" });
                 let a = document.createElement("a");
                 a.href = URL.createObjectURL(blob);
-                a.download = `logo${index + 1}.svg`;
+                a.download = `logo${index + 1}_${word}.svg`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -104,33 +180,52 @@
         }
 
         function downloadPNG() {
-            document.querySelectorAll(".logo svg").forEach((svgElement, index) => {
-                let svgData = new XMLSerializer().serializeToString(svgElement);
-                let canvas = document.createElement("canvas");
-                let ctx = canvas.getContext("2d");
-                let img = new Image();
+            ensureUbuntuFontLoaded().then(() => {
+                let word = document.getElementById("wordInput").value;
+                let promises = Array.from(document.querySelectorAll(".logo svg")).map((svgElement, index) => {
+                    return new Promise((resolve) => {
+                        let svgData = new XMLSerializer().serializeToString(svgElement);
+                        let canvas = document.createElement("canvas");
+                        let ctx = canvas.getContext("2d");
+                        let img = new Image();
 
-                let svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-                let url = URL.createObjectURL(svgBlob);
+                        let svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+                        let url = URL.createObjectURL(svgBlob);
 
-                img.onload = function () {
-                    canvas.width = 600;
-                    canvas.height = 80;
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                    URL.revokeObjectURL(url);
+                        img.onload = function () {
+                            canvas.width = 600;
+                            canvas.height = 80;
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, 0, 0);
+                            URL.revokeObjectURL(url);
 
-                    let a = document.createElement("a");
-                    a.href = canvas.toDataURL("image/png");
-                    a.download = `logo${index + 1}.png`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                };
+                            canvas.toBlob((blob) => {
+                                resolve({
+                                    blob: blob,
+                                    filename: `logo${index + 1}_${word}.png`
+                                });
+                            }, "image/png");
+                        };
 
-                img.src = url;
+                        img.src = url;
+                    });
+                });
+
+                Promise.all(promises).then((results) => {
+                    results.forEach((result) => {
+                        let a = document.createElement("a");
+                        a.href = URL.createObjectURL(result.blob);
+                        a.download = result.filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    });
+                });
             });
         }
+
+        // Generate initial logos on page load
+        window.onload = generateLogos;
     </script>
 </body>
 </html>
